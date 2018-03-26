@@ -2,6 +2,9 @@ from channels.auth import channel_session_user_from_http, channel_session_user
 
 from .models import Room
 
+import json
+from channels import Channel
+
 '''
 Event Handler: When User Connects to the WebSocket
 When a user connects to the websocket, first of all we have to identify it. In this case,
@@ -48,3 +51,22 @@ def ws_disconnect(message):
             room.websocket_group.discard(message.reply_channel)
         except Room.DoesNotExist:
             pass
+
+'''
+Message Processing:
+    For comfortable work we will send the data in the form of "json", so when you receive
+    a message we will parse "json", and send the received data into the "channel".
+'''
+
+# Unpacks the JSON in the received WebSocket frame and puts it onto a channel
+# of it's own with a few attributes extra so we can route it.
+# This doesn't need @channel_session_user as the next consumer will have that,
+# and we preserve message.reply_channel (which that's based on)
+def ws_receive(message):
+    # All websockets frames have either a text or binary payload; we decode the
+    # text part here assuming it's JSON.
+    # You could easily build up a basic framework that did this encoding/decoding,'
+    # for you as well as handling common errors.
+    payload = json.loads(message['text'])
+    payload['reply_channel'] = message.content['reply_channel']
+    Channel('chat.receive').send(payload)
