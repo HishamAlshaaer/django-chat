@@ -1,8 +1,8 @@
 from channels.auth import channel_session_user_from_http, channel_session_user
 
-from multichat.chat.exceptions import ClientError
-from multichat.chat.settings import NOTIFY_USERS_ON_ENTER_OR_LEAVE_ROOMS, MSG_TYPE_ENTER, MSG_TYPE_LEAVE
-from multichat.chat.utils import get_room_or_error, catch_client_error
+from .exceptions import ClientError
+from .settings import NOTIFY_USERS_ON_ENTER_OR_LEAVE_ROOMS, MSG_TYPE_ENTER, MSG_TYPE_LEAVE
+from .utils import get_room_or_error, catch_client_error
 from .models import Room
 
 import json
