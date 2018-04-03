@@ -41,6 +41,38 @@ $(function () {
             }));
         }
 
-    })
+    });
+
+    socket.onmessage = function (message) {
+
+        // Decode the JSON
+        console.log("Got websocket message" + message.data);
+        var data = JSON.parse(message.data);
+        // Handle Errors
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        // Handle Joining
+        if (data.join) {
+            console.log("Joining room" + data.join);
+            var roomdiv = $(
+                "<div class='room' id='room-" + data.join + "'>" +
+                "<h2>" + data.title + "</h2>" +
+                "<div class='messages'></div>" +
+                "<input><button>Send</button>" +
+                "</div>"
+            );
+            $("#chats").append(roomdiv);
+
+            // Handle Leaving
+        }  else if (data.leave) {
+            console.log("Leaving room"+ data.leave);
+            $("#room-" + data.leave).remove();
+        } else {
+            console.log("Cannot handle message!");
+        }
+    }
 
 });
