@@ -1,10 +1,7 @@
 {% extends "base.html" %}
-{% block title %}
-    Multichat Example
-{% endblock title %}    
-{% block header_text %}
-    Multichat Exmaple
-{% endblock header_text %}
+{% load staticfiles %}
+{% block title %}Multichat Example{% endblock title %}
+{% block header_text %}Multichat Exmaple{% endblock header_text %}
 
 {% block content %}
 <ul class="rooms">
@@ -18,3 +15,9 @@
 <div id="chats">
 </div>
 {% endblock content %}
+
+{% block extra_body %}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
+    <script src="{% static "main.js" %}"></script>
+{% endblock extra_body %}
