@@ -1,5 +1,7 @@
 from channels.auth import channel_session_user_from_http, channel_session_user
 
+from multichat.chat.settings import NOTIFY_USERS_ON_ENTER_OR_LEAVE_ROOMS, MSG_TYPE_ENTER
+from multichat.chat.utils import get_room_or_error, catch_client_error
 from .models import Room
 
 import json
@@ -70,3 +72,35 @@ def ws_receive(message):
     payload = json.loads(message['text'])
     payload['reply_channel'] = message.content['reply_channel']
     Channel('chat.receive').send(payload)
+
+
+# Channel _session_user loads the user out from the channel session and presents
+# it as message.user. There's also a http_session_user if you want to do this on
+# a low level HTTP handler, or just channel_session if all you want is the
+# message.channel_session object without the auth fetching overhead.
+@channel_session_user
+@catch_client_error
+def chat_join(message):
+    # Find the room they requested (by ID) and add ourselves to the send group
+    # Note that, because of channel_session_user, we have a message.user
+    # object that works just like request.user would. Security!
+    room = get_room_or_error(message['room'], message.user)
+
+    # Send a "enter message" to the room if available
+    if NOTIFY_USERS_ON_ENTER_OR_LEAVE_ROOMS:
+        room.send_message(None, message.user, MSG_TYPE_ENTER)
+
+    # OK, add them in. The websocket_group is what we'll send messages
+    # to so that everyone in the chat room gets them.
+    room.websocket_group.add(message.reply_channel)
+    message.channel_session['rooms'] = list(set(message.chennel_session['rooms']).union([room.id]))
+    # Send a message back that will prompt them to open the room
+    # Done server-side so that we could, for example, make people
+    # join rooms automatically.
+    message.reply_channel.send({
+        "text": json.dumps({
+            "join": str(room.id),
+            "title": room.title,
+        }),
+    })
+
