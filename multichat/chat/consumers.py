@@ -1,5 +1,6 @@
 from channels.auth import channel_session_user_from_http, channel_session_user
 
+from multichat.chat.exceptions import ClientError
 from multichat.chat.settings import NOTIFY_USERS_ON_ENTER_OR_LEAVE_ROOMS, MSG_TYPE_ENTER, MSG_TYPE_LEAVE
 from multichat.chat.utils import get_room_or_error, catch_client_error
 from .models import Room
@@ -123,5 +124,14 @@ def chat_leave(message):
             "leave": str(room.id),
         })
     })
+
+# User sent a message
+@channel_session_user
+@catch_client_error
+def chat_send(message):
+    if int(message['room']) not in message.channel.session['rooms']:
+        raise ClientError("ROOM_ACCESS_DENIED")
+    room = get_room_or_error(message['room'], message.user)
+    room.send_message(message['message'], message.user)
 
 
